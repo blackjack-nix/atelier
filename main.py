@@ -108,7 +108,7 @@ def init_jeu():
             [1,0,2,0,2,0,2,0,2,0,2,0,2,0,2,2,0,2,0,2,0,2,0,2,0,2,0,2,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]
-
+    grilledistance =TAB
     HAUTEUR = len(TAB)     # Nombre de cases en hauteur
     LARGEUR = len(TAB[0])  # Nombre de cases en largeur
     LIST_JOUEUR.clear()
@@ -120,7 +120,7 @@ def init_jeu():
     JOUEUR_JAUNE = IA(POS_IA[0][0], POS_IA[0][1],1, JAUNE,int(ZOOM*(102/64)), ZOOM, (0,-1))
     JOUEUR_ORANGE = IA(POS_IA[1][0], POS_IA[1][1],1, ORANGE,int(ZOOM*(102/64)), ZOOM,(1,0))
     JOUEUR_ROUGE = IA(POS_IA[2][0], POS_IA[2][1],1, ROUGE,int(ZOOM*(102/64)), ZOOM,(-1,0))
-
+    
 init_jeu()
 TIME = time.time()
 
@@ -404,11 +404,30 @@ def iaFuite(ia) :
 #   Si non, elle se dirige dans une direction jusqu'à rencontrer un mur
 def moveIA(ia):
     if iaDanger(ia) :  iaFuite(ia)
+    elif len(LIST_BONUS) !=0: 
+            if(ia.x != 0 or ia.y !=0): ia.needToGoCenter = True
+            else:ia.needToGoCenter = False
+            #possibleMove = getPossibleMove(ia)
+            coup = DirectionMinPac(ia.caseX,ia.caseY)
+            if(not ia.needToGoCenter):
+                ia.dir = coup
+                
+                ia.move(ia.dir[0]*VIT, ia.dir[1]*VIT,ZOOM)
+                ia.setRightDir()
+            else:
+                ia.move(ia.dir[0]*VIT, ia.dir[1]*VIT,ZOOM)
     else :
         possibleMove = getPossibleMove(ia)
         if((0,0) in possibleMove): possibleMove.remove((0,0))
         if (ia.dir in possibleMove):
-            ia.move(ia.dir[0]*VIT, ia.dir[1]*VIT,ZOOM)
+            
+                ia.move(ia.dir[0]*VIT, ia.dir[1]*VIT,ZOOM)
+                ia.setRightDir()
+            
+
+                
+        
+            
         else:
             poseBombe(ia)
             if(len(possibleMove) !=0 ):
@@ -489,7 +508,55 @@ def takeBonus(player):
             LIST_BONUS.remove(bonus)
             TAB[player.caseX][player.caseY]=0
 
+def GrilleDistBonus():
+    global grilledistance
+    grilledistance = copy.deepcopy(TAB)
+    for x in range(LARGEUR):
+        for y in range(HAUTEUR):
+            if (TAB[y][x] == 6): grilledistance[y][x] = 0
+            elif (TAB[y][x] == 1 or TAB[y][x] == 2 or TAB[y][x] == 3): grilledistance[y][x] = 1000
+            else: grilledistance[y][x] = 100
+    
 
+
+def MiseaDistance():
+    global grilledistance
+    done = True
+    while done:
+        done = False
+        print("zbeuy")
+        for y in range(HAUTEUR):
+            for x in range(LARGEUR):
+                if (grilledistance[y][x] == 1000): continue
+                if (grilledistance[y][x] >= 0):
+                    mini = min(grilledistance[y][x+1], grilledistance[y][x-1], grilledistance[y+1][x], grilledistance[y-1][x])
+                    if (mini+1 < grilledistance[y][x]):
+                        grilledistance[y][x] = mini +1
+                        done = True
+        return  grilledistance
+
+def DirectionMinPac(x,y):
+    global grilledistance
+    distmin = 10000
+    coup = (x, y)
+    if (grilledistance[x+1][y] < distmin):
+        distmin = grilledistance[x+1][y]
+      
+        coup = (0, 1)
+    if (grilledistance[x-1][y] < distmin):
+        distmin = grilledistance[x-1][y]
+      
+        coup = (0, -1)
+    if (grilledistance[x][y+1] < distmin):
+        distmin = grilledistance[x][y+1]
+       
+        coup = (1, 0)
+    if (grilledistance[x][y-1] < distmin):
+        distmin = grilledistance[x][y-1]
+     
+        coup = (-1, 0)
+
+    return coup
 #################################################################################
 ##
 ##  Initialisation
@@ -545,9 +612,12 @@ while not DONE:
             draw()
 
     grilleBombe()
+    GrilleDistBonus()
     miseDistance()
     for ia in LIST_IA:
         moveIA(ia)
+
+
 
     keysPressed = pygame.key.get_pressed()  # On retient les touches pressees
 
@@ -580,9 +650,10 @@ while not DONE:
     for ia in LIST_IA:
         Meurt(ia)
 
-    #print()
-    #for i in range(len(TAB)):
-        #print(TAB[i])
+    test = MiseaDistance()
+    print()
+    for i in range(len(TAB)):
+        print(test[i])
 
     Meurt(JOUEUR_BLEU)
     if (JOUEUR_BLEU not in LIST_JOUEUR):
