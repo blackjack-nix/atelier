@@ -403,8 +403,10 @@ def iaFuite(ia) :
 #   Regarde en premiere si l'IA est en danger = dans le rayon d'explosion de la bombe
 #   Si non, elle se dirige dans une direction jusqu'à rencontrer un mur
 def moveIA(ia):
+    IaBloqued(ia.caseX,ia.caseY,ia)
     if iaDanger(ia) :  iaFuite(ia)
-    elif len(LIST_BONUS) !=0: 
+    elif len(LIST_BONUS) !=0 and not ia.bloqued: 
+            print(GRILLE_BONUS)
             if(ia.x != 0 or ia.y !=0): ia.needToGoCenter = True
             else:ia.needToGoCenter = False
             #possibleMove = getPossibleMove(ia)
@@ -539,24 +541,31 @@ def DirectionMinPac(x,y):
     coup = (x, y)
     if (GRILLE_BONUS[x+1][y] < distmin):
         distmin = GRILLE_BONUS[x+1][y]
-      
+ 
         coup = (0, 1)
     if (GRILLE_BONUS[x-1][y] < distmin):
         distmin = GRILLE_BONUS[x-1][y]
-      
+
         coup = (0, -1)
     if (GRILLE_BONUS[x][y+1] < distmin):
         distmin = GRILLE_BONUS[x][y+1]
-       
+     
         coup = (1, 0)
     if (GRILLE_BONUS[x][y-1] < distmin):
         distmin = GRILLE_BONUS[x][y-1]
-     
+        
         coup = (-1, 0)
-
     return coup
+def IaBloqued(x,y,ia):
+    if((GRILLE_BONUS[x+1][y] or GRILLE_BONUS[x-1][y] or GRILLE_BONUS[x][y+1] or GRILLE_BONUS[x][y-1])==100):
+        ia.bloqued =True
+    else:
+        ia.bloqued = False
+
+
+    
 #################################################################################
-##
+##i
 ##  Initialisation
 
 def Init():
@@ -608,10 +617,11 @@ while not DONE:
             BLOCK_MIDDLE = pygame.transform.scale(pygame.image.load("images/blocks/stone2.png"),(ZOOM,ZOOM))
             pygame.display.flip()
             draw()
-
+    print(JOUEUR_JAUNE.bloqued)
     grilleBombe()
     miseDistance()
     GrilleDistBonus()
+
     MiseaDistance()
     for ia in LIST_IA:
         moveIA(ia)
