@@ -108,7 +108,6 @@ def init_jeu():
             [1,0,2,0,2,0,2,0,2,0,2,0,2,0,2,2,0,2,0,2,0,2,0,2,0,2,0,2,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]
-    grilledistance =TAB
     HAUTEUR = len(TAB)     # Nombre de cases en hauteur
     LARGEUR = len(TAB[0])  # Nombre de cases en largeur
     LIST_JOUEUR.clear()
@@ -127,6 +126,7 @@ TIME = time.time()
 DONE = False                                # Variable qui indique si le jeu est terminé
 
 GRILLE_BOMBE = None     # Grille contenant les distances aux bombes sur la map
+GRILLE_BONUS = None
 
 #################################################################################
 ##
@@ -509,50 +509,48 @@ def takeBonus(player):
             TAB[player.caseX][player.caseY]=0
 
 def GrilleDistBonus():
-    global grilledistance
-    grilledistance = copy.deepcopy(TAB)
+    global GRILLE_BONUS
+    GRILLE_BONUS = copy.deepcopy(TAB)
     for x in range(LARGEUR):
         for y in range(HAUTEUR):
-            if (TAB[y][x] == 6): grilledistance[y][x] = 0
-            elif (TAB[y][x] == 1 or TAB[y][x] == 2 or TAB[y][x] == 3): grilledistance[y][x] = 1000
-            else: grilledistance[y][x] = 100
+            if (TAB[y][x] == 6): GRILLE_BONUS[y][x] = 0
+            elif (TAB[y][x] == 1 or TAB[y][x] == 2 or TAB[y][x] == 3): GRILLE_BONUS[y][x] = 1000
+            else: GRILLE_BONUS[y][x] = 100
     
 
 
 def MiseaDistance():
-    global grilledistance
+    global GRILLE_BONUS
     done = True
     while done:
         done = False
-        print("zbeuy")
         for y in range(HAUTEUR):
             for x in range(LARGEUR):
-                if (grilledistance[y][x] == 1000): continue
-                if (grilledistance[y][x] >= 0):
-                    mini = min(grilledistance[y][x+1], grilledistance[y][x-1], grilledistance[y+1][x], grilledistance[y-1][x])
-                    if (mini+1 < grilledistance[y][x]):
-                        grilledistance[y][x] = mini +1
+                if (GRILLE_BONUS[y][x] == 1000): continue
+                if (GRILLE_BONUS[y][x] >= 0):
+                    mini = min(GRILLE_BONUS[y][x+1], GRILLE_BONUS[y][x-1], GRILLE_BONUS[y+1][x], GRILLE_BONUS[y-1][x])
+                    if (mini+1 < GRILLE_BONUS[y][x]):
+                        GRILLE_BONUS[y][x] = mini +1
                         done = True
-        return  grilledistance
 
 def DirectionMinPac(x,y):
-    global grilledistance
+    global GRILLE_BONUS
     distmin = 10000
     coup = (x, y)
-    if (grilledistance[x+1][y] < distmin):
-        distmin = grilledistance[x+1][y]
+    if (GRILLE_BONUS[x+1][y] < distmin):
+        distmin = GRILLE_BONUS[x+1][y]
       
         coup = (0, 1)
-    if (grilledistance[x-1][y] < distmin):
-        distmin = grilledistance[x-1][y]
+    if (GRILLE_BONUS[x-1][y] < distmin):
+        distmin = GRILLE_BONUS[x-1][y]
       
         coup = (0, -1)
-    if (grilledistance[x][y+1] < distmin):
-        distmin = grilledistance[x][y+1]
+    if (GRILLE_BONUS[x][y+1] < distmin):
+        distmin = GRILLE_BONUS[x][y+1]
        
         coup = (1, 0)
-    if (grilledistance[x][y-1] < distmin):
-        distmin = grilledistance[x][y-1]
+    if (GRILLE_BONUS[x][y-1] < distmin):
+        distmin = GRILLE_BONUS[x][y-1]
      
         coup = (-1, 0)
 
@@ -612,8 +610,9 @@ while not DONE:
             draw()
 
     grilleBombe()
-    GrilleDistBonus()
     miseDistance()
+    GrilleDistBonus()
+    MiseaDistance()
     for ia in LIST_IA:
         moveIA(ia)
 
@@ -650,10 +649,9 @@ while not DONE:
     for ia in LIST_IA:
         Meurt(ia)
 
-    test = MiseaDistance()
-    print()
-    for i in range(len(TAB)):
-        print(test[i])
+    #print()
+    #for i in range(len(TAB)):
+        #print(GRILLE_BONUS[i])
 
     Meurt(JOUEUR_BLEU)
     if (JOUEUR_BLEU not in LIST_JOUEUR):
